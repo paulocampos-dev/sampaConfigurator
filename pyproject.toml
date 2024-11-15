@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "sampaconfigurator"
+version = "0.1.0"
+description = "This is a CLI tool to configure the SAMPA chip"
+authors = ["Paulo Campos <paulo.acampos@proton.me>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+click = "^8.1.7"
+pyserial = "^3.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+sampaconfigurator = "sampaconfigurator:cli" #entry point do programa
