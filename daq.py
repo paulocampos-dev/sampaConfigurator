@@ -3,7 +3,7 @@ import utils.utils as utils
 from constants import CMD_READ
 
 """
-DAQ is from Data Aquisition
+DAQ is for Data Aquisition
 Here we define the two most important methods:
 daq_read
 daq_write
@@ -28,7 +28,7 @@ daq_write
     type=click.IntRange(0, 0xFFFF),
     help="16-bit register address to read from",
 )
-def daq_read(port: str, address: int) -> tuple[bool, int]:
+def daq_read(port: str, address: int, baudrate: int) -> tuple[bool, int]:
     """
     Reads data from the DAQ board at the specified address.
 
@@ -40,7 +40,7 @@ def daq_read(port: str, address: int) -> tuple[bool, int]:
         Tuple[bool, int]: A tuple where the first element indicates success (True/False),
                           and the second is the data read from the DAQ (32-bit unsigned).
     """
-    ser = utils.create_serial_connection(port)
+    ser = utils.create_serial_connection(port, baudrate=baudrate)
     try:
         # Ensure the serial port is open
         if not ser.is_open:
@@ -66,5 +66,5 @@ def daq_read(port: str, address: int) -> tuple[bool, int]:
         return True, data
 
     except Exception as ex:
-        print(f"Error: {ex}")
+        print(f"Error reading from address {address} : {ex}")
         return False, 0

@@ -11,16 +11,15 @@
 
 ## Instalação
 
-Para o desenvolvimento e gerenciamento do projeto
-utilizamos [Poetry](https://python-poetry.org) para instalar.
+Para o desenvolvimento e gerenciamento do projeto utilizamos [Poetry](https://python-poetry.org).
 
-Poetry utilize:
+Para instalar Poetry utilize:
 
 ```shell
 pipx install poetry
 ```
 
-Depois, para instalar as dependências, no mesmo diretório onde clonou o repositório,
+Depois, para instalar as dependências, no mesmo diretório onde clonou este repositório,
 utilize:
 
 ```shell
@@ -29,7 +28,17 @@ poetry install
 
 ## Utilizando
 
-na mesma pasta em que está o arquivo rode:
+Na mesma pasta em que está o arquivo rode:
+
+```shell
+poetry shell
+```
+
+Depois, utilize as funções do sampaconfigurator.
+
+## Ler um registrador específico da FPGA
+
+Utilize a função daq_read (Data acquisition)
 
 ```shell
 sampaconfigurator...
