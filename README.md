@@ -41,5 +41,5 @@ Depois, utilize as funções do sampaconfigurator.
 Utilize a função daq_read (Data acquisition)
 
 ```shell
-sampaconfigurator...
+sampaconfigurator daq-read --port [PORT] --address [ADDRESS]
 ```
