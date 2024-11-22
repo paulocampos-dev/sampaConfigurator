@@ -1,6 +1,6 @@
 import click
 import utils.utils as utils
-from constants import CMD_READ
+from constants import CMD_READ, CNC_BASE_ADD
 
 """
 DAQ is for Data Aquisition
@@ -40,10 +40,13 @@ def daq_read(port: str, address: int, baudrate: int) -> tuple[bool, int]:
         Tuple[bool, int]: A tuple where the first element indicates success (True/False),
                           and the second is the data read from the DAQ (32-bit unsigned).
     """
+
+    address += int(CNC_BASE_ADD)
     ser = utils.create_serial_connection(port, baudrate=baudrate)
     try:
         # Ensure the serial port is open
         if not ser.is_open:
+            click.echo("Error: Serial Port not open")
             return False, 0
 
         # Prepare command
@@ -52,19 +55,29 @@ def daq_read(port: str, address: int, baudrate: int) -> tuple[bool, int]:
         buf_s[1] = (address >> 8) & 0xFF  # High byte of address
         buf_s[2] = address & 0xFF  # Low byte of address
 
-        # Send command
-        ser.write(buf_s)
+        try:
+            ser.write(buf_s)
+        except Exception as e:
+            click.echo(f"Error writing data to the port {port} : {e}")
+            return False, 0
 
         # Read response
         buf_r = bytearray(4)
         n = 0
         while n < 4:
-            n += ser.readinto(buf_r[n:])  # Read remaining bytes
+            n_tmp = ser.read(4 - n)  # Read remaining bytes
+            if not n_tmp:  # Timeout or no data received
+                click.echo("Error: Timeout reading from serial port.")
+                return False, 0
+
+            buf_r[n : n + len(n_tmp)] = n_tmp
+            n += len(n_tmp)
 
         # Convert buffer to a single 32-bit integer
         data = (buf_r[0] << 24) | (buf_r[1] << 16) | (buf_r[2] << 8) | buf_r[3]
+        click.echo(f"Read: addr 0x{address:04X} data 0x{data:08X}")
         return True, data
 
     except Exception as ex:
-        print(f"Error reading from address {address} : {ex}")
+        click.echo(f"Error reading from address {address} : {ex}")
         return False, 0
