@@ -63,25 +63,10 @@ def daq_read(port: str, address: int, baudrate: int) -> tuple[bool, int]:
 
         # Read response
         buf_r = bytearray(4)
-        n = ser.read(4)
-        buf_r[0:3] = n
-        # used to see the types
-        # print(f"n -> valor: {n}, tipo:{type(n)}")
-        # print(f"buf_r -> valor: {buf_r}, tipo:{type(buf_r)}")
-
-        # n = 0
-        # while n < 4:
-        #     n_tmp = ser.read(4 - n)  # Read remaining bytes
-        #     if not n_tmp:  # Timeout or no data received
-        #         click.echo("Error: Timeout reading from serial port.")
-        #         return False, 0
-        #
-        #     buf_r[n : n + len(n_tmp)] = n_tmp
-        #     n += len(n_tmp)
+        buf_r[0:3] = ser.read(4)
 
         # Convert buffer to a single 32-bit integer
         data = (buf_r[0] << 24) | (buf_r[1] << 16) | (buf_r[2] << 8) | buf_r[3]
-        # print(f"data -> valor: {data}, tipo:{type(data)}")
         click.echo(f"Read: addr 0x{address:04X} data 0x{data:08X}")
         return True, data
 
