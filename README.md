@@ -38,8 +38,8 @@ Depois, utilize as funções do sampaconfigurator.
 
 ## Ler um registrador específico da FPGA
 
-Utilize a função daq_read (Data acquisition)
+Utilize a função fpga-read
 
 ```shell
-sampaconfigurator daq-read --port [PORT] --address [ADDRESS]
+sampaconfigurator fpga-read --port [PORT] --address [ADDRESS]
 ```

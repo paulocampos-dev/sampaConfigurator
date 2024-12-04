@@ -1,6 +1,6 @@
 import click
-import utils.utils as utils
-from constants import CMD_READ, CNC_BASE_ADD
+import serial
+from constants import CMD_READ
 
 """
 DAQ is for Data Aquisition
@@ -10,39 +10,19 @@ daq_write
 """
 
 
-@click.command()
-@click.option(
-    "--port",
-    required=True,
-    help="Serial port to communicate with (e.g., COM1, /dev/ttyUSB0).",
-)
-@click.option(
-    "--baudrate",
-    default=115200,
-    show_default=True,
-    help="Baud rate for the serial communication.",
-)
-@click.option(
-    "--address",
-    required=True,
-    type=click.IntRange(0, 0xFFFF),
-    help="16-bit register address to read from",
-)
-def daq_read(port: str, address: int, baudrate: int) -> tuple[bool, int]:
+def daq_read(address: int, ser: serial.Serial) -> tuple[bool, int]:
     """
     Reads data from the DAQ board at the specified address.
 
     Parameters:
-        port (str): The name of the port (e.g., 'COM3' for Windows or '/dev/ttyUSB0' for Linux).
         address (int): The address of the register to read (16-bit unsigned).
+        ser (serial.Serial): The serial connection.
 
     Returns:
         Tuple[bool, int]: A tuple where the first element indicates success (True/False),
                           and the second is the data read from the DAQ (32-bit unsigned).
     """
 
-    address += int(CNC_BASE_ADD)
-    ser = utils.create_serial_connection(port, baudrate=baudrate)
     try:
         # Ensure the serial port is open
         if not ser.is_open:
@@ -58,7 +38,7 @@ def daq_read(port: str, address: int, baudrate: int) -> tuple[bool, int]:
         try:
             ser.write(buf_s)
         except Exception as e:
-            click.echo(f"Error writing data to the port {port} : {e}")
+            click.echo(f"Error writing data to the port {ser.port} : {e}")
             return False, 0
 
         # Read response

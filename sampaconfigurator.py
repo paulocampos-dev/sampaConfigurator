@@ -1,6 +1,6 @@
 import click
 
-import daq
+import fpga
 
 
 @click.group()
@@ -8,4 +8,4 @@ def cli() -> None:
     pass
 
 
-cli.add_command(daq.daq_read)
+cli.add_command(fpga.fpga_read)
