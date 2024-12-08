@@ -1,6 +1,6 @@
 import click
 import serial
-from constants import CMD_READ, CNC_BASE_ADD, DM_BASE_ADD
+from constants import CMD_ACK, CMD_READ, CMD_WRITE, CNC_BASE_ADD, DM_BASE_ADD
 
 """
 DAQ is for Data Aquisition
@@ -26,8 +26,7 @@ def daq_read(address: int, ser: serial.Serial) -> tuple[bool, int]:
     try:
         # Ensure the serial port is open
         if not ser.is_open:
-            click.echo("Error: Serial Port not open")
-            return False, 0
+            raise click.UsageError("Serial connection is not open")
 
         # Prepare command
         buf_s = bytearray(3)
@@ -61,3 +60,63 @@ def cnc_read(address: int, ser: serial.Serial) -> tuple[bool, int]:
 
 def dm_read(address: int, ser: serial.Serial) -> tuple[bool, int]:
     return daq_read(address + DM_BASE_ADD, ser)
+
+
+def daq_write(address: int, data: int, ser: serial.Serial) -> bool:
+    """
+    Writes data to the DAQ board at the specified address.
+
+    Parameters:
+        address (int): The address of the register to read (16-bit unsigned).
+        data (int): The data to be written.
+        ser (serial.Serial): The serial connection.
+
+    Returns:
+        bool: Indicates wheter or not the operation was successfull.
+    """
+    try:
+        # Ensure the serial port is open
+        if not ser.is_open:
+            raise click.UsageError("Serial connection is not open")
+
+        # Prepare command
+        buf_s = bytearray(7)
+        buf_s[0] = CMD_WRITE | CMD_ACK
+        buf_s[1] = (address >> 8) & 0xFF
+        buf_s[2] = address & 0xFF
+        buf_s[3] = (data >> 24) & 0xFF
+        buf_s[4] = (data >> 16) & 0xFF
+        buf_s[5] = (data >> 8) & 0xFF
+        buf_s[6] = data & 0xFF  # LSB of data
+
+        try:
+            ser.write(buf_s)
+        except Exception as e:
+            click.echo(f"Error writing data to the address {address} : {e}")
+            return False
+
+        # Read the acknowledgment byte
+        buf_r = ser.read()
+        if len(buf_r) != 1:
+            print("Failed to receive acknowledgment byte.")
+            return False
+
+        # Validate the acknowledgment byte
+        if buf_r[0] != 0x5A:
+            print(f"ACK: got 0x{buf_r[0]:02X} but should be 0x5A")
+            return False
+
+        # If everything is successful
+        return True
+
+    except Exception as ex:
+        click.echo(f"Error writing to address {address} : {ex}")
+        return False
+
+
+def cnc_write(address: int, data: int, ser: serial.Serial) -> bool:
+    return daq_write(address + CNC_BASE_ADD, data, ser)
+
+
+def dm_write(address: int, data: int, ser: serial.Serial) -> bool:
+    return daq_write(address + DM_BASE_ADD, data, ser)

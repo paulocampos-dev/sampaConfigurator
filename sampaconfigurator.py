@@ -1,5 +1,6 @@
 import click
 
+import control
 import fpga
 
 
@@ -9,3 +10,5 @@ def cli() -> None:
 
 
 cli.add_command(fpga.fpga_read)
+
+cli.add_command(control.serial_out)
