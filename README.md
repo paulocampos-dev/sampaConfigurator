@@ -36,10 +36,24 @@ poetry shell
 
 Depois, utilize as funções do sampaconfigurator.
 
-## Ler um registrador específico da FPGA
+## Ler registradores da FPGA
 
 Utilize a função fpga-read
 
 ```shell
-sampaconfigurator fpga-read --port [PORT] --address [ADDRESS]
+sampaconfigurator fpga-read --port [PORT]
+```
+
+por padrão, ela vai ler todos os registradores da FPGA.
+
+caso queira modificar e ler apenas um registrador específico, se for um
+registrador *Data Manager* utilize a flag **dm**, se for um de *Commando
+and Control* utilize a flag **cnc**
+
+```shell
+sampaconfigurator fpga-read --port [PORT] -dm --address [ADDRESS]
+```
+
+```shell
+sampaconfigurator fpga-read --port [PORT] -cnc --address [ADDRESS]
 ```

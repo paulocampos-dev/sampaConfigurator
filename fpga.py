@@ -1,6 +1,6 @@
 import click
 from utils import serial_utils, daq
-from constants import CNC_BASE_ADD, CNC_REG_SIZE, DM_BASE_ADD, DM_REG_SIZE
+from constants import CNC_REG_SIZE, DM_REG_SIZE
 
 
 @click.command()
@@ -20,9 +20,25 @@ from constants import CNC_BASE_ADD, CNC_REG_SIZE, DM_BASE_ADD, DM_REG_SIZE
     type=click.IntRange(0, 0xFFFF),
     help="16-bit register address to read from",
 )
-@click.option("--all", "-A", "read_all", is_flag=True, help="Read all the registers")
+@click.option(
+    "--cnc",
+    help="Indicates that the register will be an Comand and Control register",
+    is_flag=True,
+)
+@click.option(
+    "--dm",
+    help="Indicates that the register will be an Data Manager register",
+    is_flag=True,
+)
+@click.option(
+    "--all",
+    "-A",
+    "read_all",
+    is_flag=True,
+    help="Read all the registers, it can be used with --cnc/--dm options to read all CNC/DM registers",
+)
 def fpga_read(
-    port: str, address: int, baudrate: int, read_all: bool
+    port: str, address: int, baudrate: int, read_all: bool, cnc: bool, dm: bool
 ) -> list[tuple[bool, int]]:
     """
     Reads data from the FPGA at the specified address.
@@ -31,34 +47,57 @@ def fpga_read(
         port (str): The name of the port (e.g., 'COM3' for Windows or '/dev/ttyUSB0' for Linux).
         address (int): The address of the register to read in decimal base.
         read_all (bool): Flag that defines if All register will be read.
-
+        cnc (bool): Flag that defines if the address is for a CNC register
+        dm (bool): Flag that defines if the address is for a DM register
     Returns:
         Tuple[bool, int]: A tuple where the first element indicates success (True/False),
                           and the second is the data read from the DAQ (32-bit unsigned).
     """
     ser = serial_utils.create_serial_connection(port, baudrate=baudrate)
 
-    if read_all:
-        registers = []
+    registers = []
 
-        for i in range(CNC_REG_SIZE):
-            result = daq.daq_read(
-                i + CNC_BASE_ADD, ser
-            )  # TODO: Somar zero aqui faz sentido?
+    if address and read_all:
+        raise click.UsageError("Options --address and -A can not be used together.")
+
+    if cnc:
+        if not address and not read_all:
+            raise click.UsageError("--cnc requires --address or -A to be provided.")
+
+        if read_all:
+            for i in range(CNC_REG_SIZE):
+                result = daq.cnc_read(i, ser)
+                registers.append(result)
+        elif address:
+            result = daq.cnc_read(address, ser)
             registers.append(result)
-
-        for i in range(DM_REG_SIZE):
-            result = daq.daq_read(i + DM_BASE_ADD, ser)
-            registers.append(result)
-
-        print("------------------CNC REGISTER------------------")
-        for address, data in registers[:CNC_REG_SIZE]:  # atualmente address = true
-            print(f"Read: addr 0x{address} data 0x{data:08X}")
-
-        print("------------------DM REGISTER------------------")
-        for address, data in registers[16:]:
-            print(f"Read: addr 0x{address} data 0x{data:08X}")
 
         return registers
 
-    return list((daq.daq_read(address, ser),))
+    if dm:
+        if not address and not read_all:
+            raise click.UsageError("--dm requires --address or -A to be provided")
+
+        if read_all:
+            for i in range(DM_REG_SIZE):
+                result = daq.dm_read(i, ser)
+                registers.append(result)
+        elif address:
+            result = daq.dm_read(address, ser)
+            registers.append(result)
+
+        return registers
+
+    if read_all:
+        for i in range(CNC_REG_SIZE):
+            result = daq.cnc_read(i, ser)
+            registers.append(result)
+
+        for i in range(DM_REG_SIZE):
+            result = daq.dm_read(i, ser)
+            registers.append(result)
+
+        return registers
+
+    # should never get to this point
+    return [(False, 0)]

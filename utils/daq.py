@@ -1,6 +1,6 @@
 import click
 import serial
-from constants import CMD_READ
+from constants import CMD_READ, CNC_BASE_ADD, DM_BASE_ADD
 
 """
 DAQ is for Data Aquisition
@@ -53,3 +53,11 @@ def daq_read(address: int, ser: serial.Serial) -> tuple[bool, int]:
     except Exception as ex:
         click.echo(f"Error reading from address {address} : {ex}")
         return False, 0
+
+
+def cnc_read(address: int, ser: serial.Serial) -> tuple[bool, int]:
+    return daq_read(address + CNC_BASE_ADD, ser)
+
+
+def dm_read(address: int, ser: serial.Serial) -> tuple[bool, int]:
+    return daq_read(address + DM_BASE_ADD, ser)
